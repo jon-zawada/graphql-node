@@ -1,23 +1,49 @@
-const express = require('express');
-const { ApolloServer, gql } = require('apollo-server-express');
+const express = require("express");
+const { ApolloServer, gql } = require("apollo-server-express");
 
 const app = express();
 
-// Define GraphQL schema
+// Dummy data
+let todos = [
+  { id: "1", title: "Buy groceries", completed: false },
+  { id: "2", title: "Clean the house", completed: true },
+  { id: "3", title: "Finish project", completed: false },
+];
+
+// GraphQL Schema
 const typeDefs = gql`
+  type Todo {
+    id: ID!
+    title: String!
+    completed: Boolean!
+  }
+
   type Query {
-    hello: String
+    todos: [Todo!]!
+    todo(id: ID!): Todo
+  }
+
+  type Mutation {
+    addTodo(title: String!): Todo!
   }
 `;
 
-// Define resolvers
+// Resolvers
 const resolvers = {
   Query: {
-    hello: () => 'Hello, GraphQL!',
+    todos: () => todos,
+    todo: (_, { id }) => todos.find((todo) => todo.id === id),
+  },
+  Mutation: {
+    addTodo: (_, { title }) => {
+      const newTodo = { id: String(todos.length + 1), title, completed: false };
+      todos.push(newTodo);
+      return newTodo;
+    },
   },
 };
 
-// Create Apollo Server instance
+// Start Apollo Server
 async function startServer() {
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
